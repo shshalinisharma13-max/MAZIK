@@ -3,286 +3,324 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>DreamCatcher — Scanning</title>
+<title>Dividual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --ink:#0a0708; --velvet:#14090c; --gold:#c9a86a; --gold-soft:#8a7142;
-    --gold-glow:#f3d796; --bone:#f4ead5; --bone-dim:#b8ac8e;
+  :root{
+    --blue:#5a63f5; --blue-bright:#8b9bff; --blue-pale:#c3ccff;
+    --pink:#ff4d97; --pink-soft:#ff7ab0; --cream:#fdf8ec; --ink:#1a0d24; --shadow:#13031a;
   }
-  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; overflow:hidden; }
-  body {
-    background: radial-gradient(ellipse at center top, #1d0e12 0%, var(--ink) 65%) fixed, var(--ink);
-    color:var(--bone); font-family:"Cormorant Garamond", serif; position:relative;
-    user-select:none; -webkit-user-select:none; touch-action:none;
-  }
-  body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; opacity:0.08; z-index:999;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/></svg>");
-  }
-  body::after {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:998;
-    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    font-family:"Archivo",sans-serif; color:#fff; user-select:none; -webkit-user-select:none;
+    touch-action:none; background:var(--blue); position:relative;
   }
 
-  /* ===== Audience-facing scanning layer ===== */
-  #scanface {
-    position:fixed; inset:0; z-index:5; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:36px; text-align:center; padding:40px;
-  }
-  .brand {
-    font-family:"Cinzel", serif; font-weight:600; font-size:13px; letter-spacing:0.5em;
-    color:var(--gold); text-transform:uppercase;
-  }
-  .brand::before, .brand::after { content:"✦"; margin:0 14px; color:var(--gold-soft); font-size:9px; vertical-align:middle; }
-  .scan-ring { width:180px; height:180px; position:relative; display:flex; align-items:center; justify-content:center; }
-  .scan-ring .ring {
-    position:absolute; inset:0; border-radius:50%; border:1px solid var(--gold-soft);
-    animation:scanpulse 3.2s ease-in-out infinite; opacity:0;
-  }
-  .scan-ring .ring:nth-child(2){ animation-delay:1.05s; }
-  .scan-ring .ring:nth-child(3){ animation-delay:2.1s; }
-  @keyframes scanpulse { 0%{transform:scale(0.4);opacity:0;} 30%{opacity:0.6;} 100%{transform:scale(1.15);opacity:0;} }
-  .scan-core {
-    width:52px; height:52px; border-radius:50%;
-    background:radial-gradient(circle, var(--gold-glow), var(--gold-soft) 70%, transparent);
-    box-shadow:0 0 40px rgba(243,215,150,0.5); animation:corebeat 2.4s ease-in-out infinite;
-  }
-  @keyframes corebeat { 0%,100%{transform:scale(0.9);opacity:0.7;} 50%{transform:scale(1.1);opacity:1;} }
+  /* burst backdrop */
+  #burst{ position:fixed; inset:0; z-index:0; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 44%, var(--blue-bright) 0%, var(--blue) 45%, #3b42c9 100%); }
+  #burst::before{ content:""; position:absolute; left:50%; top:44%; width:220vmax; height:220vmax;
+    transform:translate(-50%,-50%);
+    background:repeating-conic-gradient(from 0deg at 50% 50%,
+      rgba(255,255,255,0) 0deg, rgba(255,255,255,0.15) 1deg, rgba(255,255,255,0) 2.4deg, rgba(255,255,255,0) 5deg);
+    animation:spin 120s linear infinite; opacity:0.55; }
+  @keyframes spin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
 
-  .question {
-    font-family:"Cormorant Garamond", serif; font-size:40px; font-style:italic;
-    color:var(--bone); max-width:84vw; min-height:56px; line-height:1.3;
-    transition:opacity .5s ease; opacity:0;
-  }
-  .question.show { opacity:1; }
-  .scan-sub {
-    font-family:"Cinzel", serif; font-size:9px; letter-spacing:0.4em;
-    color:var(--gold-soft); text-transform:uppercase; min-height:12px;
-  }
-  .progress { display:flex; gap:10px; }
-  .progress .pip {
-    width:7px; height:7px; border-radius:50%; border:1px solid var(--gold-soft);
-    transition:all .3s ease;
-  }
-  .progress .pip.on { background:var(--gold-glow); box-shadow:0 0 10px var(--gold-glow); border-color:var(--gold); }
+  /* hello mark */
+  #hello{ position:fixed; top:30px; left:0; right:0; z-index:6; text-align:center;
+    font-family:"Archivo Black",sans-serif; color:#fff; font-size:clamp(30px,6.5vw,46px);
+    letter-spacing:-0.02em; display:flex; align-items:center; justify-content:center; gap:9px; }
+  #hello .eye{ width:0.6em; height:0.6em; border-radius:50%; background:#fff; position:relative; }
+  #hello .eye::after{ content:""; position:absolute; right:-0.48em; top:50%; width:0.46em; height:0.9em;
+    border:0.13em solid #fff; border-left:none; border-radius:0 1em 1em 0; transform:translateY(-50%); }
 
-  /* ===== Invisible operator quadrants ===== */
-  #pad { position:fixed; inset:0; z-index:20; }
-  .quad { position:absolute; width:50%; height:50%; }
-  .q-tl { top:0; left:0; } .q-tr { top:0; right:0; }
-  .q-bl { bottom:0; left:0; } .q-br { bottom:0; right:0; }
+  /* chunky panel */
+  .stage{ position:fixed; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .panel{ position:relative; width:min(92vw,540px); background:var(--cream); color:var(--ink);
+    border:3px solid var(--ink); box-shadow:14px 14px 0 var(--shadow); }
+  .panel .bar{ background:var(--pink); border-bottom:3px solid var(--ink); font-weight:600;
+    font-size:clamp(18px,3.6vw,25px); text-align:center; padding:14px; }
+  .panel .body{ padding:48px 30px; min-height:240px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:26px; text-align:center; }
+  .panel .foot{ border-top:3px solid var(--ink); padding:20px; display:flex; justify-content:center; align-items:center; }
+  .headline{ font-family:"Archivo Black",sans-serif; font-size:clamp(30px,7vw,52px); line-height:1.05; }
+  .sub{ font-size:clamp(15px,3.4vw,20px); color:#5a4a63; font-weight:500; }
 
-  .edge-flash {
-    position:fixed; inset:0; z-index:15; pointer-events:none;
-    box-shadow:inset 0 0 0 2px rgba(243,215,150,0); transition:box-shadow .12s ease;
-  }
-  .edge-flash.on { box-shadow:inset 0 0 0 2px rgba(243,215,150,0.18); }
+  .progress-wrap{ width:100%; height:30px; border:3px solid var(--ink); background:#fff; overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background-image:repeating-linear-gradient(45deg, var(--pink) 0 14px, var(--pink-soft) 14px 28px); transition:width .2s linear; }
+  .proc-label{ font-weight:600; font-size:16px; color:#5a4a63; letter-spacing:0.04em; }
 
-  /* ===== Rehearse HUD ===== */
-  #hud {
-    position:fixed; left:12px; bottom:12px; z-index:50;
-    font-family:"Cinzel", serif; font-size:11px; letter-spacing:0.15em;
-    color:var(--gold-glow); background:rgba(10,7,8,0.82);
-    border:1px solid var(--gold-soft); border-radius:8px; padding:10px 14px; min-width:170px; display:none;
-  }
-  #hud.show { display:block; }
-  #hud .row { display:flex; justify-content:space-between; gap:14px; margin:2px 0; }
-  #hud .k { color:var(--bone-dim); }
-  #hud .big { font-size:22px; color:var(--gold-glow); letter-spacing:0.08em; }
-  #hud .hint { font-family:"Cormorant Garamond", serif; font-style:italic; font-size:13px; color:var(--bone-dim); margin-top:6px; letter-spacing:0; }
-  #rehearseToggle {
-    position:fixed; right:10px; bottom:10px; z-index:60; width:26px; height:26px; border-radius:50%;
-    border:1px solid var(--gold-soft); background:transparent; color:var(--gold-soft); font-size:11px; cursor:pointer; opacity:0.25;
-  }
-  #rehearseToggle:hover { opacity:1; }
+  .pips{ display:flex; gap:12px; }
+  .pips .pip{ width:13px; height:13px; border:2px solid var(--ink); background:#fff; }
+  .pips .pip.on{ background:var(--pink); }
+
+  .bigbtn{ background:var(--pink); border:3px solid var(--ink); box-shadow:7px 7px 0 var(--shadow);
+    font-weight:700; font-size:clamp(18px,4vw,22px); letter-spacing:0.16em; color:var(--ink);
+    padding:15px 54px; cursor:pointer; transition:transform .05s, box-shadow .05s; }
+  .bigbtn:active{ transform:translate(4px,4px); box-shadow:3px 3px 0 var(--shadow); }
+
+  .rcard{ width:190px; height:272px; background:#fff; border:3px solid var(--ink);
+    box-shadow:10px 10px 0 var(--shadow); border-radius:10px; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    transform:scale(0.5) rotate(-8deg); opacity:0; transition:transform .6s cubic-bezier(.2,.9,.3,1.3), opacity .4s; }
+  .rcard.show{ transform:scale(1) rotate(0); opacity:1; }
+  .rcard .pip-c{ font-size:90px; line-height:1; }
+  .rcard .corner{ position:absolute; font-family:"Archivo Black",sans-serif; font-size:28px; display:flex; flex-direction:column; align-items:center; line-height:0.9; }
+  .rcard .corner.tl{ top:11px; left:13px; } .rcard .corner.br{ bottom:11px; right:13px; transform:rotate(180deg); }
+  .rcard.red{ color:var(--pink); } .rcard.black{ color:var(--ink); }
+  .rname{ font-family:"Archivo Black",sans-serif; font-size:clamp(20px,4.6vw,30px); }
+
+  /* invisible operator quadrants */
+  #pad{ position:fixed; inset:0; z-index:20; }
+  #pad.locked{ pointer-events:none; }
+  .quad{ position:absolute; width:50%; height:50%; }
+  .q-tl{top:0;left:0;} .q-tr{top:0;right:0;} .q-bl{bottom:0;left:0;} .q-br{bottom:0;right:0;}
+
+  /* operator-only tap dot */
+  #tapdot{ position:fixed; bottom:6px; left:50%; transform:translateX(-50%); z-index:30;
+    width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0); transition:background .1s; pointer-events:none; }
+  #tapdot.on{ background:rgba(255,255,255,0.5); }
+
+  .corner-btn{ position:fixed; bottom:10px; z-index:60; width:30px; height:30px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.4); background:rgba(26,13,36,0.4); color:#fff; font-size:12px; cursor:pointer; opacity:0.35; }
+  .corner-btn:hover{ opacity:1; }
+  #soundToggle{ right:48px; } #rehearseToggle{ right:10px; }
+  #hud{ position:fixed; left:12px; bottom:12px; z-index:50; font-size:12px; color:#fff;
+    background:rgba(26,13,36,0.9); border:2px solid var(--pink); border-radius:8px; padding:10px 14px; min-width:180px; display:none; }
+  #hud.show{ display:block; }
+  #hud .row{ display:flex; justify-content:space-between; gap:14px; margin:3px 0; }
+  #hud .k{ color:var(--blue-pale); } #hud .big{ font-size:20px; font-weight:700; }
+  #hud .hint{ font-size:12px; color:var(--blue-pale); margin-top:6px; }
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
 
-  <div id="scanface">
-    <div class="brand">DreamCatcher</div>
-    <div class="scan-ring"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="scan-core"></div></div>
-    <div class="question" id="question"></div>
-    <div class="scan-sub" id="scanSub">Neural lattice — calibrating</div>
-    <div class="progress"><div class="pip" id="pip0"></div><div class="pip" id="pip1"></div></div>
+  <div id="burst"></div>
+  <div id="hello">Hello <span class="eye"></span></div>
+
+  <!-- QUESTIONS -->
+  <div class="stage" id="s-question">
+    <div class="panel">
+      <div class="bar" id="qBar">Question 1 of 2</div>
+      <div class="body">
+        <div class="headline" id="qHead">What is your<br>favourite colour?</div>
+        <div class="sub" id="qSub">Picture it clearly</div>
+      </div>
+      <div class="foot"><div class="pips"><div class="pip" id="pip0"></div><div class="pip" id="pip1"></div></div></div>
+    </div>
   </div>
 
+  <!-- PROCESSING -->
+  <div class="stage hidden" id="s-processing">
+    <div class="panel">
+      <div class="bar">Analysing</div>
+      <div class="body">
+        <div class="headline" style="font-size:clamp(24px,5.5vw,38px)">Catching<br>your dream…</div>
+        <div class="progress-wrap"><div class="progress-fill" id="procFill"></div></div>
+        <div class="proc-label" id="procText">Mapping neural lattice</div>
+      </div>
+      <div class="foot"><div class="proc-label">Dividual Systems™</div></div>
+    </div>
+  </div>
+
+  <!-- REVEAL -->
+  <div class="stage hidden" id="s-reveal">
+    <div class="panel">
+      <div class="bar">Your dream card</div>
+      <div class="body">
+        <div class="rcard" id="rcard">
+          <div class="corner tl"><span id="cTLv"></span><span id="cTLs"></span></div>
+          <div class="pip-c" id="cCenter"></div>
+          <div class="corner br"><span id="cBRv"></span><span id="cBRs"></span></div>
+        </div>
+        <div class="rname" id="rName"></div>
+      </div>
+      <div class="foot"><button class="bigbtn" id="btnAgain">AGAIN</button></div>
+    </div>
+  </div>
+
+  <!-- invisible operator surface -->
   <div id="pad">
     <div class="quad q-tl" data-q="tl"></div>
     <div class="quad q-tr" data-q="tr"></div>
     <div class="quad q-bl" data-q="bl"></div>
     <div class="quad q-br" data-q="br"></div>
   </div>
+  <div id="tapdot"></div>
 
-  <div class="edge-flash" id="edgeFlash"></div>
-
+  <button id="soundToggle" class="corner-btn" title="sound">♪</button>
+  <button id="rehearseToggle" class="corner-btn" title="rehearse">◐</button>
   <div id="hud">
-    <div class="row"><span class="k">stage</span><span id="hudStage" class="big">1 · suit</span></div>
+    <div class="row"><span class="k">stage</span><span id="hudStage" class="big">q1</span></div>
     <div class="row"><span class="k">suit</span><span id="hudSuit" class="big">—</span></div>
     <div class="row"><span class="k">value</span><span id="hudVal" class="big">—</span></div>
-    <div class="hint" id="hudHint">tap quadrant for suit</div>
+    <div class="hint" id="hudHint">Q1 — tap quadrant for suit</div>
   </div>
-  <button id="rehearseToggle" title="rehearse mode">◐</button>
 
 <script>
 'use strict';
 /* =======================================================================
-   DREAMCATCHER — two-question covert card input
+   DIVIDUAL — two-question build (no glitches), phone in your hand.
 
-   The audience answers two harmless questions by tapping the screen.
-   You use the SAME taps to encode the card.
+   FLOW:  Q1 "favourite colour?"  → Q2 "first song?"  → Processing → Reveal
 
-   ── STAGE 1 (e.g. "What is your favourite colour?") → SUIT ──
-      Tap ONCE in the quadrant for the suit:
-        TL ♠ spades    TR ♥ hearts
-        BL ♣ clubs     BR ♦ diamonds
-
-   ── STAGE 2 (e.g. "What is your favourite song?") → VALUE ──
-      Quadrant chooses the value BAND, number of taps picks within it:
-        TL = 1–4   (tap 1,2,3,4 times  → A,2,3,4)
-        TR = 5–8   (tap 1,2,3,4 times  → 5,6,7,8)
-        BL = 9–12  (tap 1,2,3,4 times  → 9,10,J,Q)
-        BR = 13    (tap once           → K)
-
-   Advance from stage 1 to 2 automatically after the single suit tap
-   settles (~900ms with no further tap). Stage 2 commits + sends after
-   its taps settle. Two-finger tap = cancel/restart at any point.
-
-   Each tap = faint 2px edge glow + a vibrate pulse (silent in pocket).
+   SECRET ENCODING (invisible quadrants, tap by feel):
+     Q1 SUIT — one tap:  TL ♠  TR ♥  BL ♣  BR ♦   (auto-advances to Q2)
+     Q2 VALUE — quadrant = band, taps = within band:
+        TL 1–4 · TR 5–8 · BL 9–12 · BR 13
+        e.g. 7♥ = Q1 tap TR once; Q2 tap TR twice (5+2)
+     Confirm: tiny bottom-center dot + vibrate (operator-only).
+     Q2 settles (~0.8s no tap) → processing → reveal + sendCard().
+     Two-finger tap = restart.  ♪ sound on/off.  ◐ / 'r' rehearse. 'x' reset.
    ======================================================================= */
 
-const SETTLE_MS = 900;          // gap of no taps that ends a stage
-const SUIT_BY_QUAD = { tl:'spades', tr:'hearts', bl:'clubs', br:'diamonds' };
-const SUIT_SYMBOL  = { spades:'♠', hearts:'♥', clubs:'♣', diamonds:'♦' };
-const BAND_BASE    = { tl:0, tr:4, bl:8, br:12 };   // value = base + tapCount
-const VALUE_LABEL  = {1:'A',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K'};
+const SETTLE_MS=820;
+const SUIT_BY_QUAD={ tl:'spades', tr:'hearts', bl:'clubs', br:'diamonds' };
+const SUIT_SYMBOL={ spades:'♠', hearts:'♥', clubs:'♣', diamonds:'♦' };
+const SUIT_COLOR={ spades:'black', clubs:'black', hearts:'red', diamonds:'red' };
+const SUIT_NAME={ spades:'Spades', hearts:'Hearts', clubs:'Clubs', diamonds:'Diamonds' };
+const BAND_BASE={ tl:0, tr:4, bl:8, br:12 };
+const VALUE_LABEL={1:'A',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K'};
+const VALUE_NAME={1:'Ace',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten',11:'Jack',12:'Queen',13:'King'};
 
-// ---- Misdirection questions (harmless; collect nothing) ----
-const Q_SUIT  = "What is your favourite colour?";
-const Q_VALUE = "Hum the first song that comes to mind.";
-const SUB_SUIT  = "Mapping chromatic resonance";
-const SUB_VALUE = "Matching the melody to a memory";
+const Q1_HEAD="What is your<br>favourite colour?", Q1_SUB="Picture it clearly";
+const Q2_HEAD="The first song<br>in your head?",   Q2_SUB="Let it play a moment";
 
-// ---- State ----
-let stage = 1;                  // 1 = suit, 2 = value
-let suit = null;
-let bandQuad = null;
-let tapCount = 0;
-let settleTimer = null;
+let appStage='q1';   // q1 | q2 | processing | reveal
+let suit=null, bandQuad=null, tapCount=0, settleTimer=null;
+let soundOn=false, audioCtx=null, droneOsc=null, droneGain=null;
 
-const questionEl = document.getElementById('question');
-const scanSub = document.getElementById('scanSub');
-const pip0 = document.getElementById('pip0'), pip1 = document.getElementById('pip1');
-const edgeFlash = document.getElementById('edgeFlash');
-const hud = document.getElementById('hud');
-const hudStage = document.getElementById('hudStage'), hudSuit = document.getElementById('hudSuit');
-const hudVal = document.getElementById('hudVal'), hudHint = document.getElementById('hudHint');
+const el=(id)=>document.getElementById(id);
+const stages={ question:el('s-question'), processing:el('s-processing'), reveal:el('s-reveal') };
+const pad=el('pad'), tapdot=el('tapdot');
 
-function showQuestion(text) {
-  questionEl.classList.remove('show');
-  setTimeout(() => { questionEl.textContent = text; questionEl.classList.add('show'); }, 350);
+function showStage(name){ Object.values(stages).forEach(s=>s.classList.add('hidden')); stages[name].classList.remove('hidden'); }
+
+// ---- sound ----
+function ensureAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    droneGain=audioCtx.createGain(); droneGain.gain.value=0; droneGain.connect(audioCtx.destination);
+    droneOsc=audioCtx.createOscillator(); droneOsc.type='sine'; droneOsc.frequency.value=70;
+    const lfo=audioCtx.createOscillator(); lfo.frequency.value=0.15;
+    const lg=audioCtx.createGain(); lg.gain.value=8; lfo.connect(lg); lg.connect(droneOsc.frequency);
+    droneOsc.connect(droneGain); droneOsc.start(); lfo.start();
+  }catch(e){}
 }
-function setStage(n) {
-  stage = n;
-  if (n === 1) {
-    showQuestion(Q_SUIT); scanSub.textContent = SUB_SUIT;
-    pip0.classList.add('on'); pip1.classList.remove('on');
-    hudStage.textContent = '1 · suit'; hudHint.textContent = 'tap quadrant for suit';
-  } else {
-    showQuestion(Q_VALUE); scanSub.textContent = SUB_VALUE;
-    pip0.classList.add('on'); pip1.classList.add('on');
-    hudStage.textContent = '2 · value'; hudHint.textContent = 'quad = band · taps = within band';
-  }
+function blip(freq,vol){
+  if(!soundOn||!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=freq; g.gain.value=vol||0.05; o.connect(g); g.connect(audioCtx.destination);
+  const t=audioCtx.currentTime; g.gain.setValueAtTime(g.gain.value,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+  o.start(t); o.stop(t+0.2);
 }
-
-function flashEdge() {
-  edgeFlash.classList.add('on');
-  setTimeout(() => edgeFlash.classList.remove('on'), 110);
-  if (navigator.vibrate) navigator.vibrate(8);
-}
-function updateHud() {
-  hudSuit.textContent = suit ? SUIT_SYMBOL[suit] : '—';
-  let v = (bandQuad !== null) ? (BAND_BASE[bandQuad] + tapCount) : 0;
-  hudVal.textContent = (v >= 1 && v <= 13) ? VALUE_LABEL[v] : '—';
+function setSound(on){
+  soundOn=on; el('soundToggle').style.opacity=on?1:0.35;
+  if(on){ ensureAudio(); if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+    if(droneGain) droneGain.gain.linearRampToValueAtTime(0.06,audioCtx.currentTime+0.6); }
+  else if(droneGain){ droneGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.4); }
 }
 
-function resetAll() {
-  clearTimeout(settleTimer);
-  stage = 1; suit = null; bandQuad = null; tapCount = 0;
-  setStage(1); updateHud();
+// ---- HUD ----
+function updateHud(){
+  el('hudStage').textContent=appStage;
+  el('hudSuit').textContent=suit?SUIT_SYMBOL[suit]:'—';
+  let v=(bandQuad!==null)?(BAND_BASE[bandQuad]+tapCount):0;
+  el('hudVal').textContent=(v>=1&&v<=13)?VALUE_LABEL[v]:'—';
+  el('hudHint').textContent= appStage==='q1'?'Q1 — tap quadrant for suit'
+    : appStage==='q2'?'Q2 — quad=band · taps=within' : appStage;
 }
+function tapConfirm(){ tapdot.classList.add('on'); setTimeout(()=>tapdot.classList.remove('on'),90);
+  if(navigator.vibrate) navigator.vibrate(7); blip(420,0.04); }
 
-function commit() {
-  let v = BAND_BASE[bandQuad] + tapCount;
-  if (!suit || v < 1 || v > 13) { resetAll(); return; }
-  const card = { suit, value:v, label:VALUE_LABEL[v], symbol:SUIT_SYMBOL[suit] };
-  flashEdge();
-  if (navigator.vibrate) navigator.vibrate([10,40,10]);
-  sendCard(card);                          // <<<< YOUR WEBSOCKET HOOK
-  hudHint.textContent = `SENT  ${card.label}${card.symbol}`;
-  scanSub.textContent = "Dream caught";
-  setTimeout(resetAll, 1200);
+// ---- flow ----
+function setQ1(){ appStage='q1'; el('qBar').textContent='Question 1 of 2';
+  el('qHead').innerHTML=Q1_HEAD; el('qSub').textContent=Q1_SUB;
+  el('pip0').classList.add('on'); el('pip1').classList.remove('on'); updateHud(); }
+function gotoQ2(){ appStage='q2'; el('qBar').textContent='Question 2 of 2';
+  el('qHead').innerHTML=Q2_HEAD; el('qSub').textContent=Q2_SUB;
+  el('pip0').classList.add('on'); el('pip1').classList.add('on'); updateHud(); }
+function runProcessing(){
+  appStage='processing'; pad.classList.add('locked'); updateHud(); showStage('processing');
+  if(soundOn&&droneGain) droneGain.gain.linearRampToValueAtTime(0.11,audioCtx.currentTime+1.0);
+  const fill=el('procFill'), txt=el('procText');
+  const msgs=['Mapping neural lattice','Cross-referencing the subconscious','Isolating the chosen image','Rendering the dream'];
+  let p=0, mi=0; fill.style.width='0%';
+  const iv=setInterval(()=>{
+    p+=Math.random()*15+7; if(p>100)p=100; fill.style.width=p+'%';
+    const w=Math.min(msgs.length-1,Math.floor(p/26)); if(w!==mi){ mi=w; txt.textContent=msgs[mi]; blip(300+mi*60,0.05); }
+    if(p>=100){ clearInterval(iv); setTimeout(doReveal,550); }
+  },340);
 }
-
-// ---- A tap arrives ----
-function onTap(quad) {
-  clearTimeout(settleTimer);
-  if (stage === 1) {
-    suit = SUIT_BY_QUAD[quad];
-    flashEdge(); updateHud();
-    // settle → advance to value stage
-    settleTimer = setTimeout(() => setStage(2), SETTLE_MS);
-  } else {
-    if (quad !== bandQuad) { bandQuad = quad; tapCount = 1; }
-    else { tapCount += 1; }
-    // BR band only holds value 13 → never more than 1 tap
-    if (bandQuad === 'br') tapCount = 1;
-    if (tapCount > 4) tapCount = 4;
-    flashEdge(); updateHud();
-    settleTimer = setTimeout(commit, SETTLE_MS);
-  }
+function doReveal(){
+  appStage='reveal'; updateHud(); showStage('reveal');
+  const v=BAND_BASE[bandQuad]+tapCount;
+  const card={ suit, value:v, label:VALUE_LABEL[v], symbol:SUIT_SYMBOL[suit] };
+  const rc=el('rcard');
+  el('cTLv').textContent=card.label; el('cTLs').textContent=card.symbol;
+  el('cBRv').textContent=card.label; el('cBRs').textContent=card.symbol;
+  el('cCenter').textContent=card.symbol;
+  el('rName').textContent=`The ${VALUE_NAME[v]} of ${SUIT_NAME[suit]}`;
+  rc.classList.remove('red','black'); rc.classList.add(SUIT_COLOR[suit]);
+  rc.classList.remove('show'); void rc.offsetWidth; rc.classList.add('show');
+  if(navigator.vibrate) navigator.vibrate([10,40,10]); blip(523,0.07); setTimeout(()=>blip(784,0.06),120);
+  if(soundOn&&droneGain) droneGain.gain.linearRampToValueAtTime(0.05,audioCtx.currentTime+0.6);
+  sendCard(card);   // <<<< websocket hook
+}
+function restart(){
+  clearTimeout(settleTimer); suit=null; bandQuad=null; tapCount=0;
+  el('rcard').classList.remove('show'); showStage('question'); pad.classList.remove('locked'); setQ1();
 }
 
 /* =======================================================================
-   sendCard(card)  — wire your websocket here.
-   card = { suit:'hearts', value:11, label:'J', symbol:'♥' }
-
-     function sendCard(card) {
-       send('notifyMaster', { payload: { card: card } });
-     }
-   On the reveal screen, call: reveal(card.suit, card.value)
+   sendCard(card) — wire your websocket here.
+   card = { suit:'hearts', value:7, label:'7', symbol:'♥' }
+     function sendCard(card){ send('notifyMaster',{payload:{card}}); }
    ======================================================================= */
-function sendCard(card) {
-  console.log('CARD →', card);   // TODO: replace with real websocket send
+function sendCard(card){ console.log('CARD →', card); }
+
+// ---- tap handling ----
+function onTap(quad){
+  clearTimeout(settleTimer);
+  if(appStage==='q1'){
+    suit=SUIT_BY_QUAD[quad]; tapConfirm(); updateHud();
+    settleTimer=setTimeout(gotoQ2, SETTLE_MS);
+  } else if(appStage==='q2'){
+    if(quad!==bandQuad){ bandQuad=quad; tapCount=1; } else { tapCount+=1; }
+    if(bandQuad==='br') tapCount=1; if(tapCount>4) tapCount=4;
+    tapConfirm(); updateHud();
+    settleTimer=setTimeout(runProcessing, SETTLE_MS);
+  }
 }
+function quadFrom(e){ const q=e.target.closest('.quad'); return q?q.dataset.q:null; }
+pad.addEventListener('touchstart',(e)=>{ e.preventDefault();
+  if(e.touches.length>=2){ restart(); return; }
+  const q=quadFrom(e); if(q) onTap(q);
+},{passive:false});
+pad.addEventListener('mousedown',(e)=>{ const q=quadFrom(e); if(q) onTap(q); });
 
-// ---- Input plumbing ----
-const pad = document.getElementById('pad');
-function quadFrom(e){ const q = (e.target.closest('.quad')); return q ? q.dataset.q : null; }
+// route AGAIN button (under the pad overlay)
+function hitAgain(x,y){ const b=el('btnAgain'); if(b.offsetParent===null) return false;
+  const r=b.getBoundingClientRect(); return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom; }
+pad.addEventListener('touchstart',(e)=>{ const t=e.touches[0]; if(t&&hitAgain(t.clientX,t.clientY)) restart(); },{passive:false});
+pad.addEventListener('mousedown',(e)=>{ if(hitAgain(e.clientX,e.clientY)) restart(); });
 
-pad.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  if (e.touches.length >= 2) { resetAll(); flashEdge(); return; }
-  const q = quadFrom(e); if (q) onTap(q);
-}, { passive:false });
-pad.addEventListener('mousedown', (e) => { const q = quadFrom(e); if (q) onTap(q); });
-
-// ---- Rehearse mode ----
-function toggleRehearse(){ hud.classList.toggle('show'); }
-document.getElementById('rehearseToggle').addEventListener('click', toggleRehearse);
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r') toggleRehearse();
-  else if (e.key === 'x') resetAll();
+// ---- controls ----
+el('soundToggle').addEventListener('click',()=>setSound(!soundOn));
+el('rehearseToggle').addEventListener('click',()=>el('hud').classList.toggle('show'));
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='r') el('hud').classList.toggle('show');
+  else if(e.key==='x') restart();
+  else if(e.key==='m') setSound(!soundOn);
 });
 
-// ---- Init ----
-setStage(1);
-updateHud();
+// ---- init ----
+setQ1(); showStage('question'); updateHud();
 </script>
 </body>
 </html>
-
